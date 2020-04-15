@@ -12,7 +12,8 @@
   "dependencies": {
     "express": "^4.15.2",
     "mongoose": "^5.9.9",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "passport": "^0.4.1"
   },
   "devDependencies": {
     "request": "^2.81.0",
