@@ -1,8 +1,8 @@
 function renderRank(data) {
     data.forEach(function (rankData) {
         var rankEl = document.createElement('li');
-        rankEl.innerText = rankData.user + ': ' + rankData.score;
-        document.getElementById('result').appendChild(rankEl);
+        rankEl.innerText = rankData.username + ': ' + rankData.score;
+        document.getElementById('rank').appendChild(rankEl);
     });
 }
 

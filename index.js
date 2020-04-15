@@ -18,7 +18,7 @@ db.on('open', function () {
 var Schema = mongoose.Schema;
 
 var rankSchema = new Schema({
-	user: String,
+	username: String,
 	score: Number
 });
 
@@ -44,25 +44,31 @@ app.post('/api/addRank/:username/:score', function (req, res) {
 			if (record !== null) {
 				record.score = req.params.score;
 				record.save()
-					.then(() => {
+					.then(function(){
 						console.log('Update score for user ' + req.params.username);
 						res.status(200).end();
 					})
-					.catch(err => console.error.bind(console, err));
+					.catch(function(err){
+						console.error(err.message);
+						res.status(501).end();
+					});
 				return;
 			}
 
 			var newRank = new Rank();
 
 			newRank.username = req.params.username;
-			newRank.score = req.params.username;
+			newRank.score = req.params.score;
 
 			newRank.save()
-				.then(() => {
+				.then(function(){
 					console.log('Saved new score');
 					res.status(200).end();
 				})
-				.catch(err => console.error.bind(console, err));
+				.catch(function(err){
+					console.error(err.message);
+					res.status(501).end();
+				});
 		}
 	);
 });
