@@ -3,7 +3,7 @@ var PORT = process.env.PORT || 5000;
 var fetch = require('node-fetch');
 var app = express();
 var mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://admin:admin@node-js-test-app-joh4o.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true });
+mongoose.connect('mongodb+srv://admin:4YLt2FE51F6QIxfU@node-js-test-app-joh4o.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true });
 
 var db = mongoose.connection;
 
