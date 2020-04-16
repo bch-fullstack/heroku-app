@@ -3,7 +3,7 @@ var PORT = process.env.PORT || 5000;
 var fetch = require('node-fetch');
 var app = express();
 var mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://admin:4YLt2FE51F6QIxfU@node-js-test-app-joh4o.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true });
+mongoose.connect('mongodb+srv://admin:admin@node-js-test-app-joh4o.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true });
 
 var db = mongoose.connection;
 
@@ -36,7 +36,7 @@ function handleJSON(json) {
 	var result = [],
 		imgs = json.data;
 
-	imgs.forEach(function(img){
+	imgs.forEach(function (img) {
 		Gif.findOne({ giphy_id: img.id }, function (err, record) {
 			if (err) {
 				console.log('An error has occurred: ' + err);
@@ -98,21 +98,6 @@ app.get('/', function (req, res) {
 	res.sendFile(__dirname + '/views/pages/search.html');
 });
 
-app.get('/api/everything/:query', function (req, res) {
-	if (!req.params.query) {
-		res.send('No result found from database');
-		return;
-	} 
-	
-	var regex = new RegExp(req.params.query, 'i'),
-		query = { keyword: regex };
-	
-	Gif.find(query, function (err, resp) {
-		res.send(resp);
-	});
-});
-
-
 app.get('/api/wipe', function (req, res) {
 	Gif.deleteMany({}, function (err, resp) {
 		res.send('Wiped');
@@ -120,24 +105,58 @@ app.get('/api/wipe', function (req, res) {
 });
 
 app.post('/api/gif/:searchTerm', function (req, res) {
-	var gifEndPoint = 'http://api.giphy.com/v1/gifs/search',
-		stickerEndPoint = 'http://api.giphy.com/v1/stickers/search',
-		params = {
-			apiKey: 'fIHqnkqtM7ST2n3JkRogMqokprhiWs7h',
-			searchTerm: req.params.searchTerm
-		},
-		gifEndPointUrl = buildUrl(gifEndPoint, params),
-		stickerEndPointUrl = buildUrl(stickerEndPoint, params),
-		promises = [fetchGif(gifEndPointUrl), fetchGif(stickerEndPointUrl)];
+	if (!req.params.searchTerm) {
+		res.send('Problem with search query');
+		return;
+	}
 
-	Promise.all(promises)
-		.then(function (resp) {
-			res.send({
-				gifs: resp[0],
-				stickers: resp[1]
+	var regex = new RegExp(req.params.searchTerm, 'i'),
+		query = { keyword: regex };
+
+	Gif.find(query, function (err, resp) {
+		if (err) {
+			console.error(err);
+			res.status(501).end();
+		}
+
+		if (resp.length > 4) {
+			var formattedResp = {
+				gifs: [],
+				stickers: []
+			};
+			console.log('Found some results from DB. Displaying ...');
+			resp.forEach(function(record){
+				if (record.isSticker) {
+					formattedResp.stickers.push(record.orig);
+				} else {
+					formattedResp.gifs.push(record.orig);
+				}
 			});
-		})
-		.catch(function (err) {
-			res.send('An Error has occured: ' + err);
-		});
+			res.send(formattedResp);
+			return;
+		}
+
+		console.log('Not enough matching result. Fetching from GIPHY ...');
+
+		var gifEndPoint = 'http://api.giphy.com/v1/gifs/search',
+			stickerEndPoint = 'http://api.giphy.com/v1/stickers/search',
+			params = {
+				apiKey: 'fIHqnkqtM7ST2n3JkRogMqokprhiWs7h',
+				searchTerm: req.params.searchTerm
+			},
+			gifEndPointUrl = buildUrl(gifEndPoint, params),
+			stickerEndPointUrl = buildUrl(stickerEndPoint, params),
+			promises = [fetchGif(gifEndPointUrl), fetchGif(stickerEndPointUrl)];
+
+		Promise.all(promises)
+			.then(function (resp) {
+				res.send({
+					gifs: resp[0],
+					stickers: resp[1]
+				});
+			})
+			.catch(function (err) {
+				res.send('An Error has occured: ' + err);
+			});
+	});
 });
